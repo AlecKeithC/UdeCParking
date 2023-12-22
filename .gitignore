@@ -1,0 +1,11 @@
+/__pycache__
+yolov6l.onnx
+yolov6l6_0_1.onnx
+yolov6l6_0_2.onnx
+yolov6l6_norm.onnx
+yolov6m6x.onnx
+yolov6s6.onnx
+ParkingDetector_old.py
+main_old.py
+lib/PointSelector_old.py
+/env

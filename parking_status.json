@@ -1,0 +1,51 @@
+{
+    "0": {
+        "free_spaces": 53,
+        "total_spaces": 53,
+        "pk_name": "Cubo 4",
+        "latitude": -36.833705,
+        "longitude": -73.031997,
+        "user_types": [
+            "Academico",
+            "Administrativo"
+        ],
+        "reduced_capacity": true
+    },
+    "1": {
+        "free_spaces": 0,
+        "total_spaces": 0,
+        "pk_name": "Fac. Ing.",
+        "latitude": -36.830238,
+        "longitude": -73.037176,
+        "user_types": [
+            "Academico",
+            "Administrativo"
+        ],
+        "reduced_capacity": true
+    },
+    "2": {
+        "free_spaces": 5,
+        "total_spaces": 5,
+        "pk_name": "Biblioteca",
+        "latitude": -36.832627,
+        "longitude": -73.034792,
+        "user_types": [
+            "Academico",
+            "Administrativo",
+            "Estudiante",
+            "Otros"
+        ],
+        "reduced_capacity": true
+    },
+    "3": {
+        "free_spaces": 0,
+        "total_spaces": 0,
+        "pk_name": "Dir. Servicios",
+        "latitude": -36.83023,
+        "longitude": -73.035647,
+        "user_types": [
+            "Administrativo"
+        ],
+        "reduced_capacity": true
+    }
+}

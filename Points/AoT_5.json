@@ -1,0 +1,32 @@
+[
+    {
+        "point_number": 1,
+        "x": 233,
+        "y": 281,
+        "score": 0.21
+    },
+    {
+        "point_number": 2,
+        "x": 455,
+        "y": 181,
+        "score": 0.1
+    },
+    {
+        "point_number": 3,
+        "x": 480,
+        "y": 224,
+        "score": 0.1
+    },
+    {
+        "point_number": 4,
+        "x": 369,
+        "y": 219,
+        "score": 0.1
+    },
+    {
+        "point_number": 5,
+        "x": 199,
+        "y": 314,
+        "score": 0.32
+    }
+]
