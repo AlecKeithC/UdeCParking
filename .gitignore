@@ -13,3 +13,4 @@ lib/PointSelector_old.py
 ParkingDetector640.py
 utils640.py
 model6l6.onnx
+ParkingDetectorcopy.py
