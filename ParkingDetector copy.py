@@ -8,18 +8,106 @@ import sys
 import time
 import threading
 import json
-from utils import letterbox,load_parking_points, draw_parking_points,apply_nms2, filter_contained_boxes
+from utils import letterbox,load_parking_points, draw_parking_points, apply_nms,apply_nms2, adjust_contrast_brightness
 import psycopg2
-import db_connection
+import math
 from datetime import datetime
 
+#Quedarse en la app con los datos de la última actualización de los que tienen estatica true
+
+c_x= 320
+past_angles_x = []
+D = 10.0  # en metros
+pixel_to_meter = 0.01  # en metros por píxel
 current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
+def update_last_update():
+    while True:
+        try:
+            connection = psycopg2.connect(
+                host="192.168.1.81",
+                database="parkingdb",
+                port="32783",
+                user="admin",
+                password="detectaudec"
+            )
+            cursor = connection.cursor()
+            current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            update_query = """UPDATE parking SET last_update = %s WHERE estatica = TRUE"""
+            cursor.execute(update_query, (current_timestamp,))
+            connection.commit()
+        except Exception as e:
+            print("Error al actualizar la base de datos:", e)
+        finally:
+            if connection:
+                if not connection.closed:
+                    connection.close()
+
+        time.sleep(0.1)  # Esperar 5 segundos antes de la próxima actualización
+
 # Crear y comenzar el hilo
-update_thread = threading.Thread(target=db_connection.update_last_update, daemon=True)
+update_thread = threading.Thread(target=update_last_update, daemon=True)
 update_thread.start()
 
-db_connection.initialize_cameras_in_db()
+def update_database(cam_id, free_spaces, total_spaces, pk_name, latitude, longitude, user_types, reduced_capacity, active, last_update, estatica):
+    try:
+        connection = psycopg2.connect(
+            host="192.168.1.81",
+            database="parkingdb",
+            port="32783",
+            user="admin",
+            password="detectaudec"
+        )
+        cursor = connection.cursor()
+        
+        academico = 'Academico' in user_types
+        estudiante = 'Estudiante' in user_types
+        administrativo = 'Administrativo' in user_types
+        otro = 'Otros' in user_types
+        query = """
+            INSERT INTO parking (id, free_spaces, total_spaces, pk_name, latitude, longitude, reduced_capacity, 
+                                 academico, estudiante, administrativo, otro, active, last_update, estatica)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET 
+            free_spaces = EXCLUDED.free_spaces,
+            total_spaces = EXCLUDED.total_spaces,
+            pk_name = EXCLUDED.pk_name,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude,
+            reduced_capacity = EXCLUDED.reduced_capacity,
+            academico = EXCLUDED.academico,
+            estudiante = EXCLUDED.estudiante,
+            administrativo = EXCLUDED.administrativo,
+            otro = EXCLUDED.otro,
+            active = EXCLUDED.active,
+            last_update = EXCLUDED.last_update,
+            estatica = EXCLUDED.estatica;
+        """
+
+        cursor.execute(query, (cam_id, free_spaces, total_spaces, pk_name, latitude, longitude, reduced_capacity, 
+                               academico, estudiante, administrativo, otro, active, last_update, estatica))
+
+        connection.commit()
+
+        if not active:
+            # Si active es False, borramos la fila correspondiente.
+            delete_query = "DELETE FROM parking WHERE id = %s;"
+            cursor.execute(delete_query, (cam_id,))
+            connection.commit()
+    except Exception as e:
+        print("Error al actualizar la base de datos:", e)
+    finally:
+        if connection:
+            if not connection.closed:
+                connection.close()
+
+
+def initialize_cameras_in_db():
+    for cam_id in range(0, 16):  # Asumiendo que los cam_id van del 1 al 16
+        update_database(cam_id, 0, 0, "Unknown", 0, 0, [], False, False, current_timestamp, False)
+
+initialize_cameras_in_db()
 
 with open('lib/camera_info_temp.json', 'r') as f:
     camera_info_temp = json.load(f)
@@ -27,7 +115,7 @@ with open('lib/camera_info_temp.json', 'r') as f:
 semaphore = threading.Semaphore(1)  # Semáforo para controlar el acceso a la inferencia
 
 cuda = True
-w = "model6l6.onnx"
+w = "yolov6l6_x.onnx"
 providers = ['CUDAExecutionProvider', 'CPUExecutionProvider'] if cuda else ['CPUExecutionProvider']
 session = ort.InferenceSession(w, providers=providers)
 
@@ -64,7 +152,7 @@ class VideoThread(QThread):
         self.last_time_updated = None
         self.semaphore_detected = False
         self.previous_last_update = None
-        self.occupied_since = {}  # Diccionario para rastrear cuándo un punto se convirtió en ocupado
+
 
     def verificar_out_of_range(self):
         try:
@@ -125,7 +213,6 @@ class VideoThread(QThread):
         self.status = "connected"  # Actualiza el estado a conectado si la cámara está disponible
 
         while True:
-            
             ret, frame = self.cap.read()
             if frame is None or not ret:
                 self.status = "disconnected"  # Estado actualizado a desconectado
@@ -154,16 +241,13 @@ class VideoThread(QThread):
                 continue
             else:
                 frame = cv2.resize(frame, (1280, 1280))
-
             if ret:
                 frame = cv2.resize(frame, (1280, 1280))
-                #frame = adjust_contrast_brightness(frame, 0.9,-1)
-
 
                 current_time = time.time()
-                if current_time - self.last_time >= 1.5:  # Realizar inferencia cada 5 segundos
+                if current_time - self.last_time >= 1.5:
                     
-                    with semaphore:  # Usar el semáforo
+                    with semaphore:
                         self.last_time = current_time
                         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                         image, _, _ = letterbox(img)
@@ -182,96 +266,90 @@ class VideoThread(QThread):
                             box = boxes[i]
                             score = scores[i]
                             cls_id = int(cls_ids[i])
-                            if score != 0 and cls_id in [2, 7, 9]:
+                            if score != 0:
                                 x1, y1, x2, y2 = map(int, box)
                                 self.current_boxes.append(([x1, y1, x2, y2], cls_id, score))
-                                #self.current_boxes = filter_contained_boxes(self.current_boxes)
                                 score_list.append(score)
                         if int(obj_num[0]) == 0:
                             occupied_points.clear()
 
-                        #self.current_boxes = apply_nms2(self.current_boxes, score_list, threshold=0.90)
+                        self.current_boxes = apply_nms2(self.current_boxes, score_list, threshold=0.99)
 
-            self.free_spaces = len(self.parking_points)  # Resetear los espacios libres
-            occupied_points.clear()  # Limpiar el conjunto de puntos ocupados
+                self.free_spaces = len(self.parking_points)
+                occupied_points.clear()
+                # Dibujar las últimas cajas detectadas
+                for (x1, y1, x2, y2), cls_id, score in self.current_boxes:
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                if not hasattr(self, 'occupied_points_history'):
+                    self.occupied_points_history = [set(), set(), set(), set()]
 
-            # Dibujar las últimas cajas detectadas
-            # for (x1, y1, x2, y2), cls_id, score in self.current_boxes:
-            #     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-            self.out_of_range = self.verificar_out_of_range()
-            # Decidir si proceder con el conteo de espacios ocupados o no
-            proceed_with_count = not self.out_of_range or (self.out_of_range and self.already_counted_at_zero)
-            self.free_spaces = len(self.parking_points)  # Asume que todos los puntos están libres inicialmente
-            if proceed_with_count:
-                # Creando un conjunto de puntos disponibles
-                available_points = set((point['x'], point['y']) for point in self.parking_points)
-                occupied_points = set()  # Crear un conjunto para almacenar los puntos ocupados
+                self.out_of_range = self.verificar_out_of_range()
+                proceed_with_count = not self.out_of_range or (self.out_of_range and self.already_counted_at_zero)
+                # self.free_spaces = len(self.parking_points)
+                if proceed_with_count:
+                    available_points = set((point['x'], point['y']) for point in self.parking_points)
+                    occupied_points = set()
 
-                # Bloque de código para comprobar si un punto está dentro de una caja
-                for box, cls_id, score in self.current_boxes:
-                    x1, y1, x2, y2 = box
-                    box_center = [(x1 + x2) // 2, (y1 + y2) // 2]  # Calcula el centro de la caja
+                    for box, cls_id, score in self.current_boxes:
+                        if cls_id:
+                            x1, y1, x2, y2 = box
+                            box_center = [(x1 + x2) // 2, (y1 + y2) // 2]
 
-                    # Busca el punto más cercano al centro de la caja que aún esté disponible, esté dentro de la caja y tenga un score menor o igual al de la caja
-                    min_distance = float('inf')
-                    nearest_point = None
+                            min_distance = float('inf')
+                            nearest_point = None
 
-                    for point in available_points:
-                        px, py = point
-                        if x1 <= px <= x2 and y1 <= py <= y2:  # Comprueba que el punto esté dentro de la caja
-                            point_dict = next((p for p in self.parking_points if p['x'] == px and p['y'] == py), None)
-                            if point_dict is not None:
-                                point_index = self.parking_points.index(point_dict)  # Get the index of the point in self.parking_points
-                                point_score = self.point_scores[point_index]  # Get the score of the point
-                                if score >= point_score:  # Check if the box's score is greater or equal to the point's score
-                                    distance = (box_center[0] - px) ** 2 + (box_center[1] - py) ** 2
-                                    if distance < min_distance:
-                                        min_distance = distance
-                                        nearest_point = point
+                            for point in available_points:
+                                px, py = point
+                                if x1 <= px <= x2 and y1 <= py <= y2:
+                                    point_dict = next((p for p in self.parking_points if p['x'] == px and p['y'] == py), None)
+                                    if point_dict is not None:
+                                        point_index = self.parking_points.index(point_dict)
+                                        point_score = self.point_scores[point_index]
+                                        if score >= point_score:
+                                            distance = (box_center[0] - px) ** 2 + (box_center[1] - py) ** 2
+                                            if distance < min_distance:
+                                                min_distance = distance
+                                                nearest_point = point
 
-                    # Si encontramos un punto más cercano, lo marcamos como ocupado
-                    if nearest_point:
-                        occupied_points.add(nearest_point)
+                            if nearest_point:
+                                occupied_points.add(nearest_point)
 
-                # Eliminamos los puntos ocupados de los puntos disponibles después de procesar todas las cajas
-                for point in occupied_points:
-                    available_points.remove(point)
-                current_time = time.time()
-                temp_occupied_points = set()  # Un conjunto temporal para mantener los puntos ocupados
-                for point in self.parking_points:
-                    px, py = point['x'], point['y']
-                    if (px, py) in occupied_points:
-                        self.occupied_since[(px, py)] = current_time  # Reinicia el contador si el punto está ocupado nuevamente
-                        temp_occupied_points.add((px, py))
-                    elif (px, py) in self.occupied_since:
-                        time_occupied = current_time - self.occupied_since[(px, py)]
-                        if time_occupied < 5:
-                            temp_occupied_points.add((px, py))
-                        else:
-                            del self.occupied_since[(px, py)]
+                    self.occupied_points_history.pop(0)
+                    self.occupied_points_history.append(set(occupied_points))
 
-                occupied_points = temp_occupied_points
-                self.free_spaces = len(available_points)  # Actualizar los espacios libres
-                self.occupied_spaces = len(self.parking_points) - self.free_spaces  # Actualizar los espacios ocupados
-                    # Actualizar el último last_update conocido
-                self.previous_last_update = self.last_update
-            VideoThread.parking_data[self.cam_id] = {'free_spaces': self.free_spaces,
-                                                    'total_spaces': len(self.parking_points),
-                                                    'pk_name': self.pk_name,
-                                                    'latitude': self.latitude,
-                                                    'longitude': self.longitude,
-                                                    'user_types': self.user_types,
-                                                    'reduced_capacity': self.reduced_capacity}
+                    # Determinar puntos que deben mantenerse ocupados
+                    points_to_maintain_occupied = set()
+                    for point in set.union(*self.occupied_points_history):
+                        count_occupied = sum(point in history for history in self.occupied_points_history[-2:])
+                        if count_occupied >= 1:
+                            points_to_maintain_occupied.add(point)
 
-            if VideoThread.parking_data != VideoThread.last_parking_data:  # Comprueba si hay cambios
-                with open('parking_status.json', 'w') as f:
-                    json.dump(VideoThread.parking_data, f, indent=4)
-                VideoThread.last_parking_data = VideoThread.parking_data.copy()  # Guarda la data actual como la última conocida
-                self.active = True  # Actualiza el estado de actividad a Verdadero
-                db_connection.update_database(self.cam_id, self.free_spaces, len(self.parking_points), self.pk_name, self.latitude, self.longitude, self.user_types, self.reduced_capacity,
-                                self.active, self.last_update, self.estatica)
+                    # Actualizar los puntos disponibles y ocupados
+                    for point in points_to_maintain_occupied:
+                        available_points.discard(point)
 
-            frame = draw_parking_points(frame, self.parking_points, occupied_points)
+                    self.free_spaces = len(available_points)
+                    self.occupied_spaces = len(self.parking_points) - self.free_spaces
+                    self.previous_last_update = self.last_update
+                VideoThread.parking_data[self.cam_id] = {'free_spaces': self.free_spaces,
+                                                        'total_spaces': len(self.parking_points),
+                                                        'pk_name': self.pk_name,
+                                                        'latitude': self.latitude,
+                                                        'longitude': self.longitude,
+                                                        'user_types': self.user_types,
+                                                        'reduced_capacity': self.reduced_capacity}
+
+                if VideoThread.parking_data != VideoThread.last_parking_data:
+                    with open('parking_status.json', 'w') as f:
+                        json.dump(VideoThread.parking_data, f, indent=4)
+                    VideoThread.last_parking_data = VideoThread.parking_data.copy()
+                    self.active = True
+                    update_database(self.cam_id, self.free_spaces, len(self.parking_points), self.pk_name, self.latitude, self.longitude, self.user_types, self.reduced_capacity,
+                                    self.active, self.last_update, self.estatica)
+
+                frame = draw_parking_points(frame, self.parking_points, points_to_maintain_occupied)
+
+
             # Convertir el frame a QPixmap y emitir la señal
             rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_image.shape

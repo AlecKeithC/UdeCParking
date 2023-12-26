@@ -6,6 +6,10 @@ yolov6l6_norm.onnx
 yolov6m6x.onnx
 yolov6s6.onnx
 ParkingDetector_old.py
+ParkingDetector_old1.py
 main_old.py
 lib/PointSelector_old.py
 /env
+ParkingDetector640.py
+utils640.py
+model6l6.onnx

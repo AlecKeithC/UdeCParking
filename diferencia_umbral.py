@@ -139,7 +139,7 @@ def procesar_camara(id_camara):
 
     # Continuar con el procesamiento de la cámara
     cv2.namedWindow('Frame Actual - Presione Q para salir')
-    cv2.createTrackbar('Umbral', 'Frame Actual - Presione Q para salir', int(umbral_cambio/0.01e6), 1000, on_trackbar)
+
 
     while True:
         ret, frame_actual = cap.read()
@@ -157,7 +157,10 @@ def procesar_camara(id_camara):
 
         # Verificar si el frame ha cambiado significativamente
         if norma_diferencia > umbral_cambio:
-            print("Se detectó un cambio significativo en la cámara.")
+            cv2.putText(frame_actual_resized, "Cambio en la zona detectado.", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        # Mostrar el frame actual
+        cv2.imshow('Frame Actual - Presione Q para salir', frame_actual_resized)
 
         # Mostrar el frame actual
         cv2.imshow('Frame Actual - Presione Q para salir', frame_actual_resized)

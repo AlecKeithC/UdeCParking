@@ -344,7 +344,6 @@ class MainApp(App):
         except ValueError:
             self.log_box.text += "Error: ID inválido.\n"
             return
-
         # Verificar si el ID ya existe
         for camera in camera_info:
             if camera['id'] == id_int:

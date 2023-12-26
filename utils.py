@@ -126,3 +126,26 @@ def get_gpu_utilization():
         print(f"Error while fetching GPU utilization: {e}")
         return None
 
+def filter_contained_boxes(boxes):
+    """
+    Filtra las cajas que están completamente contenidas dentro de otras.
+
+    :param boxes: Lista de cajas, donde cada caja es una tupla ([x1, y1, x2, y2], cls_id, score).
+    :return: Lista de cajas filtradas.
+    """
+    filtered_boxes = []
+    for boxA in boxes:
+        x1A, y1A, x2A, y2A = boxA[0]
+        is_contained = False
+        for boxB in boxes:
+            if boxA == boxB:
+                continue  # No comparar la caja consigo misma
+            x1B, y1B, x2B, y2B = boxB[0]
+            if x1A >= x1B and x2A <= x2B and y1A >= y1B and y2A <= y2B:
+                # Si todas las esquinas de boxA están dentro de boxB
+                is_contained = True
+                break
+        if not is_contained:
+            filtered_boxes.append(boxA)
+
+    return filtered_boxes
