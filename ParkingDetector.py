@@ -67,6 +67,7 @@ class VideoThread(QThread):
         self.occupied_since = {}  # Diccionario para rastrear cuándo un punto se convirtió en ocupado
 
     def verificar_out_of_range(self):
+        connection = None
         try:
             connection = psycopg2.connect(
                 host="192.168.1.81",
@@ -76,16 +77,28 @@ class VideoThread(QThread):
                 password="detectaudec"
             )
             cursor = connection.cursor()
+            # Seleccionar el valor de out_of_range
             cursor.execute("SELECT out_of_range FROM parking_status WHERE id = %s;", (self.cam_id,))
             result = cursor.fetchone()
-            if result:
-                return result[0]
+            
+            # Si tenemos un resultado y out_of_range es False, actualizamos last_update
+            if result and result[0] is False:  # Comprobamos explícitamente que es False
+                # Actualizar el campo last_update en la tabla parking al tiempo actual
+                current_time = datetime.now()
+                cursor.execute(
+                    "UPDATE parking SET last_update = %s WHERE id = %s;",
+                    (current_time, self.cam_id)
+                )
+                connection.commit()  # Confirmar la transacción para asegurarse de que se guarde
+
+            return result[0] if result else None  # Devolver el valor de out_of_range o None si no hay resultado
         except Exception as e:
             print(f"Error al verificar out_of_range para la cámara {self.cam_id}: {e}")
-            return False
+            return None  # Devolver None para indicar que hubo un error
         finally:
             if connection and not connection.closed:
                 connection.close()
+
 
     def retry_connection(self):
         time.sleep(10)  # Espera 10 segundos antes de volver a intentar
@@ -200,7 +213,7 @@ class VideoThread(QThread):
             #     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
             self.out_of_range = self.verificar_out_of_range()
             # Decidir si proceder con el conteo de espacios ocupados o no
-            proceed_with_count = not self.out_of_range or (self.out_of_range and self.already_counted_at_zero)
+            proceed_with_count = not self.out_of_range
             self.free_spaces = len(self.parking_points)  # Asume que todos los puntos están libres inicialmente
             if proceed_with_count:
                 # Creando un conjunto de puntos disponibles
@@ -245,7 +258,7 @@ class VideoThread(QThread):
                         temp_occupied_points.add((px, py))
                     elif (px, py) in self.occupied_since:
                         time_occupied = current_time - self.occupied_since[(px, py)]
-                        if time_occupied < 5:
+                        if time_occupied < 6.5:
                             temp_occupied_points.add((px, py))
                         else:
                             del self.occupied_since[(px, py)]

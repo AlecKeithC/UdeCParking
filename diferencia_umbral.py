@@ -32,9 +32,7 @@ def seleccionar_area(event, x, y, flags, param):
         cv2.rectangle(frame_referencia, (x_inicio, y_inicio), (x_fin, y_fin), (0, 255, 0), 2)
         cv2.imshow('Frame Referencia', frame_referencia)
 
-def on_trackbar(val):
-    global umbral_cambio
-    umbral_cambio = val * 0.01e6
+
 
 def calcular_diferencia(frame1, frame2, x, y, ancho, alto):
     roi_frame1 = frame1[y:y+alto, x:x+ancho]
@@ -53,8 +51,9 @@ def guardar_configuracion(id_camara, x, y, ancho, alto, umbral):
 def guardar_frame_referencia(id_camara, frame):
     cv2.imwrite(f'Rectangle/Rectangulo_{id_camara}.png', frame)
 
-# Popup para seleccionar el ID de la cámara
-
+def on_trackbar(val):
+    global umbral_cambio
+    umbral_cambio = val * 0.01e6
 
 class CameraIDPopup(Popup):
     def __init__(self, **kwargs):
@@ -139,6 +138,7 @@ def procesar_camara(id_camara):
 
     # Continuar con el procesamiento de la cámara
     cv2.namedWindow('Frame Actual - Presione Q para salir')
+    cv2.createTrackbar('Umbral', 'Frame Actual - Presione Q para salir', 0, 100, on_trackbar)
 
 
     while True:

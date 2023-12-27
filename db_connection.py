@@ -2,6 +2,7 @@ from datetime import datetime
 import psycopg2
 import time
 current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 def update_last_update():
     while True:
         try:
@@ -14,7 +15,7 @@ def update_last_update():
             )
             cursor = connection.cursor()
             current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            update_query = """UPDATE parking SET last_update = %s WHERE estatica = TRUE"""
+            update_query = """UPDATE parking SET last_update = %s WHERE estatica = FALSE;"""
             cursor.execute(update_query, (current_timestamp,))
             connection.commit()
         except Exception as e:
@@ -24,7 +25,7 @@ def update_last_update():
                 if not connection.closed:
                     connection.close()
 
-        time.sleep(0.1)
+        time.sleep(5)
 
 def update_database(cam_id, free_spaces, total_spaces, pk_name, latitude, longitude, user_types, reduced_capacity, active, last_update, estatica):
     try:
