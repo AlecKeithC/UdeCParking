@@ -6,7 +6,7 @@
 
 Requiere Python 3.9. Puedes descargarlo e instalarlo desde [python.org](https://www.python.org/downloads/).
 
-Para obtener el modelo necesario, visita el siguiente enlace de [Google Drive](https://drive.google.com/file/d/1QlHycASXWvXVHzgxVX728efxljNvgNUl/view?usp=sharing).
+Para obtener el modelo necesario, visita el siguiente enlace de [Google Drive](https://drive.google.com/file/d/1Vqsstft0tRYBltPqTwtcO97WC8dZtQzC/view?usp=sharing).
 
 ## Paso 1: Instalar cuDNN
 
@@ -73,7 +73,7 @@ Después de preparar tu entorno de desarrollo y activar tu entorno virtual, el s
 Para obtener la última versión del código fuente, clona el repositorio de GitHub ejecutando el siguiente comando en tu terminal:
 
 
-	git clone https://github.com/nachoklp/Parkingudec.git
+	git clone https://github.com/AlecKeithC/Parkingudec.git
 	cd Parkingudec
  
  ### Instalar Dependencias del Proyecto
