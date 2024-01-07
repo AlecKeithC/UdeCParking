@@ -82,7 +82,7 @@ Dentro del directorio del proyecto y con el entorno virtual activado, instala la
 
 pip install -r requirements.txt
 
- ### Mover modelo yolov6m6x.onnx
+ ### Mover modelo model6l6.onnx
 
  Dejar en el directorio raíz del proyecto el modelo descargado.
 
