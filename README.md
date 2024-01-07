@@ -12,7 +12,7 @@ Para obtener el modelo necesario, visita el siguiente enlace de [Google Drive](h
 
 Para utilizar cuDNN en Windows, sigue estos pasos:
 
-1. Asegúrate de que CUDA esté ya instalado en tu sistema. cuDNN es una extensión de CUDA y necesita que CUDA esté instalado.
+1. Asegúrate de que [CUDA 11.8](https://developer.nvidia.com/cuda-toolkit-archive) esté ya instalado en tu sistema. cuDNN es una extensión de CUDA y necesita que CUDA esté instalado.
 
 2. Visita la página de [NVIDIA cuDNN](https://developer.nvidia.com/cudnn) (es necesario tener una cuenta NVIDIA y estar registrado en el programa NVIDIA Developer para descargar cuDNN).
 
