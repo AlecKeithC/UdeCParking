@@ -47,29 +47,5 @@
             "Administrativo"
         ],
         "reduced_capacity": true
-    },
-    "4": {
-        "free_spaces": 23,
-        "total_spaces": 25,
-        "pk_name": "vraea",
-        "latitude": -36.830173,
-        "longitude": -73.03565,
-        "user_types": [
-            "Academico",
-            "Administrativo"
-        ],
-        "reduced_capacity": true
-    },
-    "5": {
-        "free_spaces": 34,
-        "total_spaces": 34,
-        "pk_name": "Pinacoteca",
-        "latitude": -36.828109,
-        "longitude": -73.038947,
-        "user_types": [
-            "Academico",
-            "Administrativo"
-        ],
-        "reduced_capacity": true
     }
 }

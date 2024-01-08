@@ -4,7 +4,15 @@ import json
 import threading
 import psycopg2
 import time
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+DB_IP= os.getenv("DB_IP")
+DB_NAME = os.getenv("DB_NAME")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 def cargar_configuracion(id_camara):
     with open(f'Rectangle/Rectangulo_{id_camara}.json', 'r') as f:
         data = json.load(f)
@@ -25,11 +33,11 @@ def calcular_diferencia(frame1, frame2, x, y, ancho, alto):
 def reset_out_of_range():
     try:
         with psycopg2.connect(
-                host="192.168.1.81",
-                database="parkingdb",
-                port="32783",
-                user="admin",
-                password="detectaudec"
+            host=DB_IP,
+            database=DB_NAME,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD
         ) as connection:
             with connection.cursor() as cursor:
                 query = "UPDATE parking_status SET out_of_range = False;"
@@ -44,11 +52,11 @@ reset_out_of_range()
 def update_database(cam_id, out_of_range):
     try:
         connection = psycopg2.connect(
-            host="192.168.1.81",
-            database="parkingdb",
-            port="32783",
-            user="admin",
-            password="detectaudec"
+            host=DB_IP,
+            database=DB_NAME,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
         cursor = connection.cursor()
 

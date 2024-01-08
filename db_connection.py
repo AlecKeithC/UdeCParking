@@ -1,17 +1,27 @@
 from datetime import datetime
 import psycopg2
 import time
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+DB_IP= os.getenv("DB_IP")
+DB_NAME = os.getenv("DB_NAME")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
 current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def update_last_update():
     while True:
         try:
             connection = psycopg2.connect(
-                host="192.168.1.81",
-                database="parkingdb",
-                port="32783",
-                user="admin",
-                password="detectaudec"
+                host=DB_IP,
+                database=DB_NAME,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASSWORD
             )
             cursor = connection.cursor()
             current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -30,11 +40,11 @@ def update_last_update():
 def update_database(cam_id, free_spaces, total_spaces, pk_name, latitude, longitude, user_types, reduced_capacity, active, last_update, estatica):
     try:
         connection = psycopg2.connect(
-            host="192.168.1.81",
-            database="parkingdb",
-            port="32783",
-            user="admin",
-            password="detectaudec"
+            host=DB_IP,
+            database=DB_NAME,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
         cursor = connection.cursor()
         

@@ -12,7 +12,16 @@ from utils import letterbox,load_parking_points, draw_parking_points,apply_nms2,
 import psycopg2
 import db_connection
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+DB_IP= os.getenv("DB_IP")
+DB_NAME = os.getenv("DB_NAME")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # Crear y comenzar el hilo
@@ -70,11 +79,11 @@ class VideoThread(QThread):
         connection = None
         try:
             connection = psycopg2.connect(
-                host="192.168.1.81",
-                database="parkingdb",
-                port="32783",
-                user="admin",
-                password="detectaudec"
+            host=DB_IP,
+            database=DB_NAME,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD
             )
             cursor = connection.cursor()
             # Seleccionar el valor de out_of_range
