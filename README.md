@@ -7,7 +7,7 @@ Esta guía detalla los pasos necesarios para configurar y ejecutar la aplicació
 ## Requisitos Previos
 
 - **Python 3.9**: Descárgalo e instálalo desde [python.org](https://www.python.org/downloads/).
-- **Modelo Necesario**: Descarga el modelo desde el [siguiente enlace de Google Drive](URL_DEL_ENLACE).
+- **Modelo Necesario**: Descarga el modelo desde el [siguiente enlace de Google Drive](https://drive.google.com/file/d/1Vqsstft0tRYBltPqTwtcO97WC8dZtQzC/view?usp=sharing).
 
 ## Paso 1: Instalar cuDNN
 
