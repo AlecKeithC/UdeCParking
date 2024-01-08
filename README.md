@@ -58,7 +58,7 @@ pip install -r requirements.txt
 
 ## Paso 4: Configuración de la Conexión a la Base de Datos
 
-Para configurar la conexión a la base de datos, edita los parámetros en el archivo .env en el directorio raíz del proyecto. Asegúrate de especificar los detalles correctos para tu base de datos, incluyendo el host, puerto, nombre de usuario, contraseña y nombre de la base de datos.
+Para configurar la conexión a la base de datos, edita los parámetros en el archivo `.env` en el directorio raíz del proyecto. Asegúrate de especificar los detalles correctos para tu base de datos, incluyendo el host, puerto, nombre de usuario, contraseña y nombre de la base de datos.
 
 ### Mover modelo model6l6.onnx
 
