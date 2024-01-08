@@ -6,13 +6,13 @@
 
 Requiere Python 3.9. Puedes descargarlo e instalarlo desde [python.org](https://www.python.org/downloads/).
 
-Para obtener el modelo necesario, visita el siguiente enlace de [Google Drive](https://drive.google.com/file/d/1QlHycASXWvXVHzgxVX728efxljNvgNUl/view?usp=sharing).
+Para obtener el modelo necesario, visita el siguiente enlace de [Google Drive](https://drive.google.com/file/d/1Vqsstft0tRYBltPqTwtcO97WC8dZtQzC/view?usp=sharing).
 
 ## Paso 1: Instalar cuDNN
 
 Para utilizar cuDNN en Windows, sigue estos pasos:
 
-1. Asegúrate de que CUDA esté ya instalado en tu sistema. cuDNN es una extensión de CUDA y necesita que CUDA esté instalado.
+1. Asegúrate de que [CUDA 11.8](https://developer.nvidia.com/cuda-toolkit-archive) esté ya instalado en tu sistema. cuDNN es una extensión de CUDA y necesita que CUDA esté instalado.
 
 2. Visita la página de [NVIDIA cuDNN](https://developer.nvidia.com/cudnn) (es necesario tener una cuenta NVIDIA y estar registrado en el programa NVIDIA Developer para descargar cuDNN).
 
@@ -73,7 +73,7 @@ Después de preparar tu entorno de desarrollo y activar tu entorno virtual, el s
 Para obtener la última versión del código fuente, clona el repositorio de GitHub ejecutando el siguiente comando en tu terminal:
 
 
-	git clone https://github.com/nachoklp/Parkingudec.git
+	git clone https://github.com/AlecKeithC/Parkingudec.git
 	cd Parkingudec
  
  ### Instalar Dependencias del Proyecto
@@ -82,7 +82,7 @@ Dentro del directorio del proyecto y con el entorno virtual activado, instala la
 
 pip install -r requirements.txt
 
- ### Mover modelo yolov6m6x.onnx
+ ### Mover modelo model6l6.onnx
 
  Dejar en el directorio raíz del proyecto el modelo descargado.
 
